@@ -1,23 +1,24 @@
-import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
-
-
-from config import BOT_TOKEN
 from db import create_db_and_tables
+from config import BOT_TOKEN
+import logging
+
+logger = logging.getLogger(__name__)
 
 bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
 dp = Dispatcher(storage=MemoryStorage())
 
 async def on_startup(bot: Bot):
   await create_db_and_tables()
+  me = await bot.get_me()
+  logger.warning(f'@{me.username} is running..')
 
 async def on_shutdown():
   await dp.storage.close()
-  logging.warning('Shutting down..')
-  logging.warning('Bye!')
+  logger.warning('Shutting down..')
 
 def main() -> None:
   dp.startup.register(on_startup)
