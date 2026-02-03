@@ -1,35 +1,29 @@
-import os
-from sqlalchemy import event, Engine, inspect, text
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from config import DB_NAME
+from sqlalchemy.engine import make_url
+from sqlalchemy import inspect
+from pathlib import Path
 from models.base import Base
+from config import DB_URL
 
 
-url = f"sqlite+aiosqlite:///data/{DB_NAME}"
-
-os.makedirs("data", exist_ok=True)
-engine = create_async_engine(url)
+engine = create_async_engine(DB_URL)
 async_session_maker = async_sessionmaker(engine, class_=AsyncSession)
 
-
-@event.listens_for(Engine, "connect")
-def set_sqlite_pragma(dbapi_connection, connection_record):
-  cursor = dbapi_connection.cursor()
-  cursor.execute("PRAGMA foreign_keys=ON")
-  cursor.close()
-
+def ensure_db_directory(db_url: str) -> None:
+  url = make_url(db_url)
+  if url.drivername.startswith("sqlite") and url.database:
+    Path(url.database).parent.mkdir(parents=True, exist_ok=True)
 
 async def check_all_tables_exist(db_engine):
-  async with db_engine.begin() as conn:
+  async with db_engine.connect() as conn:
+    existing_tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
     for table in Base.metadata.tables.values():
-      result = await conn.execute(
-        text(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table.name}'"))
-      if result.scalar() is None:
+      if table.name not in existing_tables:
         return False
-  return True
-
+    return True
 
 async def create_db_and_tables():
+  ensure_db_directory(DB_URL)
   async with engine.begin() as conn:
     if not await check_all_tables_exist(engine):
       await conn.run_sync(Base.metadata.drop_all)
