@@ -23,4 +23,4 @@ async def on_shutdown():
 def main() -> None:
   dp.startup.register(on_startup)
   dp.shutdown.register(on_shutdown)
-  dp.run_polling(bot, skip_updates=True)
+  dp.run_polling(bot)
