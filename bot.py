@@ -1,15 +1,13 @@
 from aiogram import Bot, Dispatcher
-from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.types import BotCommand
-from aiogram.enums import ParseMode
 from db import create_db_and_tables
 from config import BOT_TOKEN
 import logging
 
 logger = logging.getLogger(__name__)
 
-bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
+bot = Bot(BOT_TOKEN)
 dp = Dispatcher(storage=MemoryStorage())
 
 async def on_startup(bot: Bot):
