@@ -1,6 +1,7 @@
 from aiogram import Bot, Dispatcher
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.types import BotCommand
 from aiogram.enums import ParseMode
 from db import create_db_and_tables
 from config import BOT_TOKEN
@@ -12,6 +13,7 @@ bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
 dp = Dispatcher(storage=MemoryStorage())
 
 async def on_startup(bot: Bot):
+  await bot.set_my_commands([BotCommand(command="start", description="Start the bot")])
   await create_db_and_tables()
   me = await bot.get_me()
   logger.warning(f'@{me.username} is running..')
