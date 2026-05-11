@@ -2,7 +2,9 @@ from aiogram import Router
 from aiogram.filters import Command
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters.callback_data import CallbackData
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 from typing import Union
+from handlers.user.language import create_callback_language
 from services.user import UserService
 
 start_router = Router()
@@ -17,11 +19,14 @@ def create_callback_start(level: int = 0):
 async def start(message: Union[Message, CallbackQuery]):
   telegram_user = message.from_user
   translations = await UserService.get_translations(telegram_user.id)
+  start_builder = InlineKeyboardBuilder()
+  start_builder.button(text=translations["language"], callback_data=create_callback_language())
+
   await UserService.user_logged(telegram_user.id, telegram_user.username, telegram_user.full_name)
   if isinstance(message, Message):
-    await message.answer(translations["start"])
+    await message.answer(translations["start"], reply_markup=start_builder.as_markup())
   if isinstance(message, CallbackQuery):
-    await message.message.edit_text(translations["start"])
+    await message.message.edit_text(translations["start"], reply_markup=start_builder.as_markup())
 
 
 @start_router.callback_query(StartCallback.filter())
