@@ -1,9 +1,11 @@
 from aiogram import Router
 
 from bot import dp, main
+from handlers.user.start import start_router
 
 
 main_router = Router()
+main_router.include_router(start_router)
 dp.include_router(main_router)
 
 
